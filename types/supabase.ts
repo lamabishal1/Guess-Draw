@@ -197,13 +197,3 @@ export interface CanvasState {
   currentPosition: MousePosition;
 }
 
-
-// Navbar component props
-export interface NavbarProps {
-  session: ExtendedSession | null;
-  owner?: Owner | null;
-  isRoom?: boolean;
-  room?: Room | null;
-  isLoadingRoom?: boolean;
-  participantCount?: number;
-}
