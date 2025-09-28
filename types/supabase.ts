@@ -14,7 +14,7 @@ export interface ExtendedUser extends Omit<User, 'user_metadata'> {
 
 // Extended Session type
 export interface ExtendedSession extends Omit<Session, 'user'> {
-  user: ExtendedUser;
+  user: LocalUser;
 }
 
 // Room related types
@@ -26,6 +26,7 @@ export interface Room {
   createdAt: string;
   updatedAt: string;
   drawing?: string;
+
 }
 
 export interface RoomType {
@@ -40,6 +41,7 @@ export interface Owner {
   id: string;
   email?: string;
   user_metadata: UserMetadata;
+  userName?: string;
 }
 
 export interface DrawingPen {
@@ -196,4 +198,11 @@ export interface CanvasState {
   lastPosition: MousePosition;
   currentPosition: MousePosition;
 }
-
+export interface LocalUser {
+  id: string;
+  email?: string;
+  user_metadata?: {
+    userName?: string;
+    userColor?: string;
+  };
+}
