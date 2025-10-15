@@ -26,7 +26,7 @@ export default function Home() {
 
   function createUsernameFromEmail(email: string): string {
     try {
-      const username = email?.split("@")[0]; // Fixed: corrected array access
+      const username = email?.split("@")[0];
       return username;
     } catch (error) {
       throw new Error("Error occurred while creating username: " + error);
@@ -34,25 +34,27 @@ export default function Home() {
   }
 
   useEffect(() => {
-    getUserSession()
-      .then((session) => {
+    // ✅ Define helper function *before* calling it, and add proper typing
+    const handleCheckSession = async (): Promise<void> => {
+      try {
+        const session = await getUserSession();
+  
         if (session) {
           const isNewUser =
             !session?.user?.user_metadata?.userName &&
             !session?.user?.user_metadata?.userColor;
-
+  
           if (isNewUser) {
             const userName = createUsernameFromEmail(
               session?.user?.email as string
             );
             const userColor = generateUserColor();
-            
+  
             // Update user in Supabase
-            supabase.auth.updateUser({
+            await supabase.auth.updateUser({
               data: { userName, userColor },
             });
-
-            // Create updated session object
+  
             const updatedSession: Session = {
               ...session,
               user: {
@@ -64,22 +66,45 @@ export default function Home() {
                 },
               },
             };
-
+  
             setSession(updatedSession);
           } else {
             setSession(session);
           }
-          setIsAuthenticating(false);
         } else {
           window.location.href = "/login";
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error occurred while fetching user session:", error);
-        setIsAuthenticating(false);
-        // Consider redirecting to login or showing error state
         window.location.href = "/login";
-      });
+      } finally {
+        setIsAuthenticating(false);
+      }
+    };
+  
+    // ✅ Now safe to call it after definition
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setSession(data.session);
+        setIsAuthenticating(false);
+      } else {
+        handleCheckSession();
+      }
+    });
+  
+    // ✅ Listen for Supabase auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session) {
+          setSession(session);
+          setIsAuthenticating(false);
+        }
+      }
+    );
+  
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   if (isAuthenticating) {

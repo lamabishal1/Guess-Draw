@@ -124,7 +124,7 @@ const DrawingMenu = (props: DrawingMenuProp) => {
             />
           </svg>
         </div>
-        <div className='absolute z-10 bottom-12 left-1/2 transform -translate-x-1/2 p-3 rounded-lg border bg-slate-700 justify-center gap-2.5 items-center group-hover:flex flex-col min-w-max opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-800'>
+        <div className='absolute z-10 bottom-12 left-1/2 transform -translate-x-1/2 p-3 rounded-lg border bg-slate-700 justify-center gap-2.5 items-center group-hover:flex flex-col min-w-max opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-1000'>
           {DRAW_SIZES.map(({ size, width, height }) => (
             <div
               className='flex gap-3 items-center text-slate-200 justify-between w-full hover:bg-slate-600 p-2 rounded cursor-pointer'
