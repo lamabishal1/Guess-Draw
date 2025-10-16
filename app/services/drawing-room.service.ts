@@ -28,7 +28,7 @@ export const fetchUserDrawingRooms = async (userId: string) =>{
     const { data } = await supabase
     .from(DRAWING_ROOM_TABLE)
     .select()
-    .eq("owner", userId)
+    .or(`owner.eq.${userId},is_public.eq.true`)
     .order("created_at", { ascending: false});
 
     return data;
