@@ -1,4 +1,6 @@
 import { supabase } from '../lib/supabase';
+import { DrawingRoom } from "@/types/supabase";
+
 
 const DRAWING_ROOM_TABLE = "drawing-rooms";
 
@@ -41,11 +43,11 @@ export const fetchDrawingRoomByiId = async (id: string) => {
     return data;
 }
 
-export const updateRoomDrawing = async (roomId: string, drawing: string) => {
+export const updateRoomDrawing = async (roomId: string, drawing: DrawingRoom["drawing"]) => {
     await supabase
     .from(DRAWING_ROOM_TABLE)
     .update({
-        drawing,
+        drawing
     })
     .eq("id", roomId)
     .select();

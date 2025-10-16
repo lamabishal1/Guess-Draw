@@ -206,3 +206,16 @@ export interface LocalUser {
     userColor?: string;
   };
 }
+export interface Stroke {
+  x: number;
+  y: number;
+  color: string;
+  size: number;
+}
+
+export interface DrawingRoom {
+  id: string;
+  name: string;
+  drawing: Stroke[];
+  updated_at: string;
+}
