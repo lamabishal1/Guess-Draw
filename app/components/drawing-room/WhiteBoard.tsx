@@ -28,7 +28,6 @@ interface BroadcastPayload {
 const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
-
   const [session, setSession] = useState<ExtendedSession | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const channel = supabase.channel(room.id);
@@ -46,10 +45,10 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     void init();
   }, []);
 
+  /* -------------------- Load existing drawing -------------------- */
   useEffect(() => {
     if (room.drawing) {
       try {
-        // If stored as JSON string
         const strokes: Stroke[] =
           typeof room.drawing === "string" ? JSON.parse(room.drawing) : room.drawing;
         setDrawingData(strokes);
@@ -61,7 +60,6 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       setDrawingData([]);
     }
   }, [room.drawing]);
-  
 
   /* -------------------- Resize canvas -------------------- */
   useEffect(() => {
@@ -74,26 +72,26 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       canvas.width = width;
       canvas.height = height;
     };
+
     resize();
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
   }, []);
 
-  /* -------------------- Draw function -------------------- */
+  /* -------------------- Draw stroke helper -------------------- */
   const drawStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
     if (stroke.path.length < 2) return;
     ctx.strokeStyle = stroke.color;
     ctx.lineWidth = stroke.size;
     ctx.lineJoin = "round";
     ctx.lineCap = "round";
-
     ctx.beginPath();
     ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
     stroke.path.forEach((p) => ctx.lineTo(p.x, p.y));
     ctx.stroke();
   }, []);
 
-  /* -------------------- Render all strokes -------------------- */
+  /* -------------------- Render strokes -------------------- */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -107,7 +105,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     drawingData.forEach((stroke) => drawStroke(ctx, stroke));
   }, [drawingData, drawStroke]);
 
-  /* -------------------- Mouse drawing -------------------- */
+  /* -------------------- Drawing logic (mouse + touch) -------------------- */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !isAuthenticated || !session) return;
@@ -115,7 +113,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const mouse = { x: 0, y: 0 };
+    // const mouse = { x: 0, y: 0 };
     const lastMouse = { x: 0, y: 0 };
     let painting = false;
     let currentStroke: Stroke = {
@@ -127,64 +125,86 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
 
     const getOffset = () => canvas.getBoundingClientRect();
 
-    const start = (e: MouseEvent) => {
+    const startDraw = (x: number, y: number) => {
       painting = true;
-      const rect = getOffset();
-      lastMouse.x = e.clientX - rect.left;
-      lastMouse.y = e.clientY - rect.top;
       currentStroke = {
         userId: session.user.id,
         color: isEraserActive ? "#FFFFFF" : drawingPen.color,
         size: drawingPen.size,
-        path: [{ x: lastMouse.x, y: lastMouse.y }],
+        path: [{ x, y }],
       };
+      lastMouse.x = x;
+      lastMouse.y = y;
     };
 
-    const move = (e: MouseEvent) => {
+    const draw = (x: number, y: number) => {
       if (!painting) return;
-      const rect = getOffset();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-
       ctx.strokeStyle = currentStroke.color;
       ctx.lineWidth = currentStroke.size;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
-
       ctx.beginPath();
       ctx.moveTo(lastMouse.x, lastMouse.y);
-      ctx.lineTo(mouse.x, mouse.y);
+      ctx.lineTo(x, y);
       ctx.stroke();
-
-      currentStroke.path.push({ x: mouse.x, y: mouse.y });
-      lastMouse.x = mouse.x;
-      lastMouse.y = mouse.y;
+      currentStroke.path.push({ x, y });
+      lastMouse.x = x;
+      lastMouse.y = y;
     };
 
-    const end = async () => {
+    const endDraw = async () => {
       if (!painting) return;
       painting = false;
-
       setDrawingData((prev) => [...prev, currentStroke]);
-
-      // save to Supabase
       await supabase
         .from("drawing-rooms")
         .update({ drawing: [...drawingData, currentStroke] })
         .eq("id", room.id);
-
-      // broadcast
       channel.send({ type: "broadcast", event: "new-stroke", payload: currentStroke });
     };
 
-    canvas.addEventListener("mousedown", start);
-    canvas.addEventListener("mousemove", move);
-    window.addEventListener("mouseup", end);
+    /* -------------------- Mouse Events -------------------- */
+    const handleMouseDown = (e: MouseEvent) => {
+      const rect = getOffset();
+      startDraw(e.clientX - rect.left, e.clientY - rect.top);
+    };
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = getOffset();
+      draw(e.clientX - rect.left, e.clientY - rect.top);
+    };
+    const handleMouseUp = () => endDraw();
+
+    /* -------------------- Touch Events -------------------- */
+    const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      const rect = getOffset();
+      const touch = e.touches[0];
+      startDraw(touch.clientX - rect.left, touch.clientY - rect.top);
+    };
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const rect = getOffset();
+      const touch = e.touches[0];
+      draw(touch.clientX - rect.left, touch.clientY - rect.top);
+    };
+    const handleTouchEnd = () => endDraw();
+
+    /* -------------------- Register listeners -------------------- */
+    canvas.addEventListener("mousedown", handleMouseDown);
+    canvas.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd);
 
     return () => {
-      canvas.removeEventListener("mousedown", start);
-      canvas.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseup", end);
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      canvas.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
     };
   }, [
     isAuthenticated,
@@ -197,7 +217,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     drawingData,
   ]);
 
-  /* -------------------- Receive strokes from others -------------------- */
+  /* -------------------- Receive strokes -------------------- */
   useEffect(() => {
     const subscription = channel
       .on("broadcast", { event: "new-stroke" }, (payload: BroadcastPayload) => {
@@ -209,7 +229,10 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
   }, [channel]);
 
   return (
-    <div ref={boardRef} className="w-full h-full relative border">
+    <div
+      ref={boardRef}
+      className="w-full h-full relative border overflow-hidden touch-none"
+    >
       <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
