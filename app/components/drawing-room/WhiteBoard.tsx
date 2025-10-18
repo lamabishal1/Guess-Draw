@@ -182,7 +182,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       painting = true;
     };
     const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 1) return; // allow scroll with 2 fingers
+      if (!painting || e.touches.length > 1) return; // allow scroll with 2 fingers
       e.preventDefault();
       const rect = getOffset();
       const touch = e.touches[0];
