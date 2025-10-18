@@ -20,14 +20,13 @@ type Props = {
 const VideoWrapper = ({ children, userData, callId }: Props) => {
   const [client, setClient] = useState<StreamVideoClient | null>(null);
   const [call, setCall] = useState<ReturnType<StreamVideoClient["call"]> | null>(null);
-  const callRef = useRef<typeof call>(null); // useRef for stable reference
+  const [joined, setJoined] = useState(false); // track if joined
+  const callRef = useRef<typeof call>(null);
 
   useEffect(() => {
     if (!userData) return;
 
-    let isMounted = true;
-
-    const initVideoCall = async () => {
+    const initClient = async () => {
       try {
         const { token } = await generateUserVideoToken(userData.id);
 
@@ -45,34 +44,49 @@ const VideoWrapper = ({ children, userData, callId }: Props) => {
           token,
         });
 
-        if (!isMounted) return;
-
         setClient(videoClient);
-
         const newCall = videoClient.call("development", callId);
-        await newCall.join({ create: true });
-
-        if (!isMounted) return;
-
         setCall(newCall);
-        callRef.current = newCall; // store in ref for cleanup
-      } catch (error) {
-        console.error("Error initializing video call:", error);
+        callRef.current = newCall;
+      } catch (err) {
+        console.error("Error initializing Stream client:", err);
       }
     };
 
-    void initVideoCall();
+    void initClient();
 
     return () => {
-      isMounted = false;
-      callRef.current?.leave(); // safely leave call on unmount
+      callRef.current?.leave();
     };
   }, [userData, callId]);
+
+  const handleJoin = async () => {
+    if (!call) return;
+    try {
+      await call.join({ create: true }); // must be called after user gesture
+      setJoined(true);
+    } catch (err) {
+      console.error("Error joining call:", err);
+    }
+  };
 
   if (!client || !call) {
     return (
       <div className="mt-2 h-32 flex justify-center items-center">
         <Spinner />
+      </div>
+    );
+  }
+
+  if (!joined) {
+    return (
+      <div className="mt-2 h-32 flex justify-center items-center">
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={handleJoin}
+        >
+          Join Video Call
+        </button>
       </div>
     );
   }

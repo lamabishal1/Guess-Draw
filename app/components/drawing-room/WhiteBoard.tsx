@@ -105,21 +105,22 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     drawingData.forEach((stroke) => drawStroke(ctx, stroke));
   }, [drawingData, drawStroke]);
 
-  /* -------------------- Pointer-based Drawing -------------------- */
+  /* -------------------- Drawing logic (mouse + touch) -------------------- */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !isAuthenticated || !session) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let drawing = false;
-    let lastPos = { x: 0, y: 0 };
+    let painting = false;
     let currentStroke: Stroke = {
       userId: session.user.id,
       color: drawingPen.color,
       size: drawingPen.size,
       path: [],
     };
+    let primaryPointerId: number | null = null;
+    let lastPos = { x: 0, y: 0 };
 
     const getPos = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -127,8 +128,9 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     };
 
     const startDraw = (e: PointerEvent) => {
-      if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
-      drawing = true;
+      if (primaryPointerId !== null) return; // ignore additional pointers
+      primaryPointerId = e.pointerId;
+      painting = true;
       const pos = getPos(e);
       currentStroke = {
         userId: session.user.id,
@@ -140,7 +142,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     };
 
     const draw = (e: PointerEvent) => {
-      if (!drawing) return;
+      if (!painting || e.pointerId !== primaryPointerId) return;
       const pos = getPos(e);
       ctx.strokeStyle = currentStroke.color;
       ctx.lineWidth = currentStroke.size;
@@ -154,9 +156,10 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       lastPos = pos;
     };
 
-    const endDraw = async () => {
-      if (!drawing) return;
-      drawing = false;
+    const endDraw = async (e?: PointerEvent) => {
+      if (!painting || (e && e.pointerId !== primaryPointerId)) return;
+      painting = false;
+      primaryPointerId = null;
       setDrawingData((prev) => [...prev, currentStroke]);
       await supabase
         .from("drawing-rooms")
@@ -165,16 +168,28 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       channel.send({ type: "broadcast", event: "new-stroke", payload: currentStroke });
     };
 
+    /* -------------------- Pointer Events -------------------- */
     canvas.addEventListener("pointerdown", startDraw);
     canvas.addEventListener("pointermove", draw);
     window.addEventListener("pointerup", endDraw);
+    window.addEventListener("pointercancel", endDraw);
 
     return () => {
       canvas.removeEventListener("pointerdown", startDraw);
       canvas.removeEventListener("pointermove", draw);
       window.removeEventListener("pointerup", endDraw);
+      window.removeEventListener("pointercancel", endDraw);
     };
-  }, [drawingPen, isEraserActive, session, channel, room.id, drawingData, isAuthenticated]);
+  }, [
+    isAuthenticated,
+    drawingPen.color,
+    drawingPen.size,
+    isEraserActive,
+    session,
+    channel,
+    room.id,
+    drawingData,
+  ]);
 
   /* -------------------- Receive strokes -------------------- */
   useEffect(() => {
@@ -190,12 +205,9 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
   return (
     <div
       ref={boardRef}
-      className="w-full h-full relative border overflow-auto touch-pan-y"
+      className="w-full h-full relative border overflow-auto"
     >
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full"
-      />
+      <canvas ref={canvasRef} className="w-full h-full" />
     </div>
   );
 };
