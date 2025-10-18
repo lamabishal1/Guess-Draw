@@ -14,7 +14,13 @@ interface BoardContainerProps {
   room: Room | null;
 }
 
+
+
 const BoardContainer: React.FC<BoardContainerProps> = ({ room }) => {
+
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
   const [drawingPen, setDrawingPen] = useState<DrawingPen>({
     color: "#000000",
     size: 5,
@@ -37,6 +43,10 @@ const BoardContainer: React.FC<BoardContainerProps> = ({ room }) => {
           room={room}
           drawingPen={drawingPen}
           isEraserActive={isEraserActive}
+          onUndoRedoChange={(canUndo, canRedo) => {
+            setCanUndo(canUndo);
+            setCanRedo(canRedo);
+          }}
         />
       </div>
 
@@ -45,6 +55,8 @@ const BoardContainer: React.FC<BoardContainerProps> = ({ room }) => {
         setDrawingPen={setDrawingPen}
         isEraserActive={isEraserActive}
         setIsEraserActive={setIsEraserActive}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
     </section>
   );

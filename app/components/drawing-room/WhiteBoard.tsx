@@ -17,6 +17,7 @@ interface BoardProps {
   room: Room;
   drawingPen: DrawingPen;
   isEraserActive: boolean;
+  onUndoRedoChange?: (canUndo: boolean, canRedo: boolean) => void;
 }
 
 interface BroadcastPayload {
@@ -25,13 +26,93 @@ interface BroadcastPayload {
   payload: Stroke;
 }
 
-const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) => {
+declare global {
+  interface Window {
+    whiteboardUndo?: () => void;
+    whiteboardRedo?: () => void;
+  }
+}
+
+const WhiteBoard: React.FC<BoardProps> = ({ 
+  room, 
+  drawingPen, 
+  isEraserActive,
+  onUndoRedoChange,
+}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const [session, setSession] = useState<ExtendedSession | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const channel = supabase.channel(room.id);
   const [drawingData, setDrawingData] = useState<Stroke[]>([]);
+  const [undoStack, setUndoStack] = useState<Stroke[]>([]);
+
+  // Notify parent of undo/redo state changes
+  useEffect(() => {
+    if (onUndoRedoChange) {
+      onUndoRedoChange(drawingData.length > 0, undoStack.length > 0);
+    }
+  }, [drawingData.length, undoStack.length, onUndoRedoChange]);
+
+  const handleUndo = useCallback(() => {
+    setDrawingData((prev) => {
+      if (prev.length === 0) return prev;
+      const newDrawingData = [...prev];
+      const lastStroke = newDrawingData.pop();
+      if (lastStroke) {
+        setUndoStack((u) => [...u, lastStroke]);
+      }
+      return newDrawingData;
+    });
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    setUndoStack((prev) => {
+      if (prev.length === 0) return prev;
+      const newUndoStack = [...prev];
+      const redoStroke = newUndoStack.pop();
+      if (redoStroke) {
+        setDrawingData((d) => [...d, redoStroke]);
+      }
+      return newUndoStack;
+    });
+  }, []);
+
+  // Expose undo/redo methods through window
+  useEffect(() => {
+    window.whiteboardUndo = handleUndo;
+    window.whiteboardRedo = handleRedo;
+    return () => {
+      delete window.whiteboardUndo;
+      delete window.whiteboardRedo;
+    };
+  }, [handleUndo, handleRedo]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (const stroke of drawingData) {
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      if (stroke.path.length > 0) {
+        ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
+        for (let i = 1; i < stroke.path.length; i++) {
+          ctx.lineTo(stroke.path[i].x, stroke.path[i].y);
+        }
+      }
+      ctx.stroke();
+    }
+  }, [drawingData]);
 
   /* -------------------- Init session -------------------- */
   useEffect(() => {
@@ -47,16 +128,20 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
 
   /* -------------------- Load existing drawing -------------------- */
   useEffect(() => {
-    if (room.drawing) {
-      try {
-        const strokes: Stroke[] =
-          typeof room.drawing === "string" ? JSON.parse(room.drawing) : room.drawing;
-        setDrawingData(strokes);
-      } catch (error) {
-        console.error("Failed to parse drawing data:", error);
-        setDrawingData([]);
-      }
-    } else {
+    if (!room.drawing) {
+      setDrawingData([]);
+      return;
+    }
+
+    try {
+      const strokes = Array.isArray(room.drawing)
+        ? (room.drawing as Stroke[])
+        : JSON.parse(room.drawing as string);
+
+      setDrawingData(strokes);
+      setUndoStack([]);
+    } catch (error) {
+      console.error("Failed to load drawing data:", error);
       setDrawingData([]);
     }
   }, [room.drawing]);
@@ -77,33 +162,6 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
   }, []);
-
-  /* -------------------- Draw stroke helper -------------------- */
-  const drawStroke = useCallback((ctx: CanvasRenderingContext2D, stroke: Stroke) => {
-    if (stroke.path.length < 2) return;
-    ctx.strokeStyle = stroke.color;
-    ctx.lineWidth = stroke.size;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(stroke.path[0].x, stroke.path[0].y);
-    stroke.path.forEach((p) => ctx.lineTo(p.x, p.y));
-    ctx.stroke();
-  }, []);
-
-  /* -------------------- Render strokes -------------------- */
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    drawingData.forEach((stroke) => drawStroke(ctx, stroke));
-  }, [drawingData, drawStroke]);
 
   /* -------------------- Drawing logic (mouse + touch) -------------------- */
   useEffect(() => {
@@ -128,7 +186,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     };
 
     const startDraw = (e: PointerEvent) => {
-      if (primaryPointerId !== null) return; // ignore additional pointers
+      if (primaryPointerId !== null) return;
       primaryPointerId = e.pointerId;
       painting = true;
       const pos = getPos(e);
@@ -160,7 +218,10 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       if (!painting || (e && e.pointerId !== primaryPointerId)) return;
       painting = false;
       primaryPointerId = null;
+
       setDrawingData((prev) => [...prev, currentStroke]);
+      setUndoStack([]);
+
       await supabase
         .from("drawing-rooms")
         .update({ drawing: [...drawingData, currentStroke] })
@@ -199,7 +260,9 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       })
       .subscribe();
 
-    return () => void subscription.unsubscribe();
+    return () => {
+      void subscription.unsubscribe();
+    };
   }, [channel]);
 
   return (
