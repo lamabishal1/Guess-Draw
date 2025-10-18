@@ -100,6 +100,7 @@ const VideoWrapper = ({ children, userData, callId }: Props) => {
       </div>
     );
   }
+  if (!client || !call) return null; 
 
   return (
     <StreamVideo client={client!}>
