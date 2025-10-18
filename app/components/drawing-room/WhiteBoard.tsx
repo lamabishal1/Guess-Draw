@@ -174,24 +174,45 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     const handleMouseUp = () => endDraw();
 
     /* -------------------- Touch Events -------------------- */
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length > 1) return; // allow scroll with 2 fingers
+    /* -------------------- Touch Events -------------------- */
+let startTouch: { x: number; y: number } | null = null;
+let isTouchDrawing = false;
+
+const handleTouchStart = (e: TouchEvent) => {
+  if (e.touches.length > 1) return; // allow scroll with 2 fingers
+  const touch = e.touches[0];
+  startTouch = { x: touch.clientX, y: touch.clientY };
+  isTouchDrawing = false; // don’t draw yet
+};
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!startTouch || e.touches.length > 1) return; // multi-touch scroll
+  const touch = e.touches[0];
+  const dx = Math.abs(touch.clientX - startTouch.x);
+  const dy = Math.abs(touch.clientY - startTouch.y);
+
+  // Only start drawing if horizontal movement is bigger than vertical
+  if (!isTouchDrawing) {
+    if (dx > dy && dx > 5) {
+      isTouchDrawing = true;
       const rect = getOffset();
-      const touch = e.touches[0];
       startDraw(touch.clientX - rect.left, touch.clientY - rect.top);
-      painting = true;
-    };
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!painting || e.touches.length > 1) return; // allow scroll with 2 fingers
-      e.preventDefault();
-      const rect = getOffset();
-      const touch = e.touches[0];
-      draw(touch.clientX - rect.left, touch.clientY - rect.top);
-    };
-    const handleTouchEnd = () => {
-      if (!painting) return;
-      endDraw();
-    };
+    } else return; // let vertical swipe scroll
+  }
+
+  if (isTouchDrawing) {
+    e.preventDefault(); // prevent scroll only when drawing
+    const rect = getOffset();
+    draw(touch.clientX - rect.left, touch.clientY - rect.top);
+  }
+};
+
+const handleTouchEnd = () => {
+  if (isTouchDrawing) endDraw();
+  startTouch = null;
+  isTouchDrawing = false;
+};
+
     /* -------------------- Register listeners -------------------- */
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
