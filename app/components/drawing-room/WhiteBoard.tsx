@@ -105,16 +105,15 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     drawingData.forEach((stroke) => drawStroke(ctx, stroke));
   }, [drawingData, drawStroke]);
 
-  /* -------------------- Drawing logic (mouse + touch) -------------------- */
+  /* -------------------- Pointer-based Drawing -------------------- */
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas || !isAuthenticated || !session) return;
-
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const lastPos = { x: 0, y: 0 };
-    let painting = false;
+    let drawing = false;
+    let lastPos = { x: 0, y: 0 };
     let currentStroke: Stroke = {
       userId: session.user.id,
       color: drawingPen.color,
@@ -122,38 +121,42 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       path: [],
     };
 
-    const getOffset = () => canvas.getBoundingClientRect();
+    const getPos = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
 
-    const startDraw = (x: number, y: number) => {
-      painting = true;
+    const startDraw = (e: PointerEvent) => {
+      if (e.pointerType !== "touch" && e.pointerType !== "mouse") return;
+      drawing = true;
+      const pos = getPos(e);
       currentStroke = {
         userId: session.user.id,
         color: isEraserActive ? "#FFFFFF" : drawingPen.color,
         size: drawingPen.size,
-        path: [{ x, y }],
+        path: [pos],
       };
-      lastPos.x = x;
-      lastPos.y = y;
+      lastPos = pos;
     };
 
-    const draw = (x: number, y: number) => {
-      if (!painting) return;
+    const draw = (e: PointerEvent) => {
+      if (!drawing) return;
+      const pos = getPos(e);
       ctx.strokeStyle = currentStroke.color;
       ctx.lineWidth = currentStroke.size;
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(lastPos.x, lastPos.y);
-      ctx.lineTo(x, y);
+      ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
-      currentStroke.path.push({ x, y });
-      lastPos.x = x;
-      lastPos.y = y;
+      currentStroke.path.push(pos);
+      lastPos = pos;
     };
 
     const endDraw = async () => {
-      if (!painting) return;
-      painting = false;
+      if (!drawing) return;
+      drawing = false;
       setDrawingData((prev) => [...prev, currentStroke]);
       await supabase
         .from("drawing-rooms")
@@ -162,84 +165,16 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       channel.send({ type: "broadcast", event: "new-stroke", payload: currentStroke });
     };
 
-    /* -------------------- Mouse Events -------------------- */
-    const handleMouseDown = (e: MouseEvent) => {
-      const rect = getOffset();
-      startDraw(e.clientX - rect.left, e.clientY - rect.top);
-    };
-    const handleMouseMove = (e: MouseEvent) => {
-      const rect = getOffset();
-      draw(e.clientX - rect.left, e.clientY - rect.top);
-    };
-    const handleMouseUp = () => endDraw();
-
-    /* -------------------- Touch Events -------------------- */
-    /* -------------------- Touch Events -------------------- */
-let startTouch: { x: number; y: number } | null = null;
-let isTouchDrawing = false;
-
-const handleTouchStart = (e: TouchEvent) => {
-  if (e.touches.length > 1) return; // allow scroll with 2 fingers
-  const touch = e.touches[0];
-  startTouch = { x: touch.clientX, y: touch.clientY };
-  isTouchDrawing = false; // don’t draw yet
-};
-
-const handleTouchMove = (e: TouchEvent) => {
-  if (!startTouch || e.touches.length > 1) return; // multi-touch scroll
-  const touch = e.touches[0];
-  const dx = Math.abs(touch.clientX - startTouch.x);
-  const dy = Math.abs(touch.clientY - startTouch.y);
-
-  // Only start drawing if horizontal movement is bigger than vertical
-  if (!isTouchDrawing) {
-    if (dx > dy && dx > 5) {
-      isTouchDrawing = true;
-      const rect = getOffset();
-      startDraw(touch.clientX - rect.left, touch.clientY - rect.top);
-    } else return; // let vertical swipe scroll
-  }
-
-  if (isTouchDrawing) {
-    e.preventDefault(); // prevent scroll only when drawing
-    const rect = getOffset();
-    draw(touch.clientX - rect.left, touch.clientY - rect.top);
-  }
-};
-
-const handleTouchEnd = () => {
-  if (isTouchDrawing) endDraw();
-  startTouch = null;
-  isTouchDrawing = false;
-};
-
-    /* -------------------- Register listeners -------------------- */
-    canvas.addEventListener("mousedown", handleMouseDown);
-    canvas.addEventListener("mousemove", handleMouseMove);
-    window.addEventListener("mouseup", handleMouseUp);
-
-    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
-    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
-    canvas.addEventListener("touchend", handleTouchEnd);
+    canvas.addEventListener("pointerdown", startDraw);
+    canvas.addEventListener("pointermove", draw);
+    window.addEventListener("pointerup", endDraw);
 
     return () => {
-      canvas.removeEventListener("mousedown", handleMouseDown);
-      canvas.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseup", handleMouseUp);
-      canvas.removeEventListener("touchstart", handleTouchStart);
-      canvas.removeEventListener("touchmove", handleTouchMove);
-      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("pointerdown", startDraw);
+      canvas.removeEventListener("pointermove", draw);
+      window.removeEventListener("pointerup", endDraw);
     };
-  }, [
-    isAuthenticated,
-    drawingPen.color,
-    drawingPen.size,
-    isEraserActive,
-    session,
-    channel,
-    room.id,
-    drawingData,
-  ]);
+  }, [drawingPen, isEraserActive, session, channel, room.id, drawingData, isAuthenticated]);
 
   /* -------------------- Receive strokes -------------------- */
   useEffect(() => {
@@ -255,7 +190,7 @@ const handleTouchEnd = () => {
   return (
     <div
       ref={boardRef}
-      className="w-full h-full relative border overflow-auto" // scroll enabled
+      className="w-full h-full relative border overflow-auto touch-pan-y"
     >
       <canvas
         ref={canvasRef}
