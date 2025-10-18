@@ -113,8 +113,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // const mouse = { x: 0, y: 0 };
-    const lastMouse = { x: 0, y: 0 };
+    const lastPos = { x: 0, y: 0 };
     let painting = false;
     let currentStroke: Stroke = {
       userId: session.user.id,
@@ -133,8 +132,8 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
         size: drawingPen.size,
         path: [{ x, y }],
       };
-      lastMouse.x = x;
-      lastMouse.y = y;
+      lastPos.x = x;
+      lastPos.y = y;
     };
 
     const draw = (x: number, y: number) => {
@@ -144,12 +143,12 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(lastMouse.x, lastMouse.y);
+      ctx.moveTo(lastPos.x, lastPos.y);
       ctx.lineTo(x, y);
       ctx.stroke();
       currentStroke.path.push({ x, y });
-      lastMouse.x = x;
-      lastMouse.y = y;
+      lastPos.x = x;
+      lastPos.y = y;
     };
 
     const endDraw = async () => {
@@ -176,12 +175,14 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
 
     /* -------------------- Touch Events -------------------- */
     const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length > 1) return; // allow scroll with 2 fingers
       e.preventDefault();
       const rect = getOffset();
       const touch = e.touches[0];
       startDraw(touch.clientX - rect.left, touch.clientY - rect.top);
     };
     const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 1) return; // allow scroll with 2 fingers
       e.preventDefault();
       const rect = getOffset();
       const touch = e.touches[0];
@@ -231,9 +232,12 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
   return (
     <div
       ref={boardRef}
-      className="w-full h-full relative border overflow-hidden touch-none"
+      className="w-full h-full relative border overflow-auto" // scroll enabled
     >
-      <canvas ref={canvasRef} className="w-full h-full" />
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+      />
     </div>
   );
 };
