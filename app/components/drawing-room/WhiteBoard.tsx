@@ -179,6 +179,7 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       const rect = getOffset();
       const touch = e.touches[0];
       startDraw(touch.clientX - rect.left, touch.clientY - rect.top);
+      painting = true;
     };
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 1) return; // allow scroll with 2 fingers
@@ -187,8 +188,10 @@ const WhiteBoard: React.FC<BoardProps> = ({ room, drawingPen, isEraserActive }) 
       const touch = e.touches[0];
       draw(touch.clientX - rect.left, touch.clientY - rect.top);
     };
-    const handleTouchEnd = () => endDraw();
-
+    const handleTouchEnd = () => {
+      if (!painting) return;
+      endDraw();
+    };
     /* -------------------- Register listeners -------------------- */
     canvas.addEventListener("mousedown", handleMouseDown);
     canvas.addEventListener("mousemove", handleMouseMove);
