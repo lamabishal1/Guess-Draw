@@ -1,7 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { DrawingRoom } from "@/types/supabase";
 
-
 const DRAWING_ROOM_TABLE = "drawing-rooms";
 
 export const createDrawingRoom = async (
@@ -21,6 +20,7 @@ export const createDrawingRoom = async (
     })
     .select();
     
+    
     return data;
 }
 
@@ -28,7 +28,7 @@ export const fetchUserDrawingRooms = async (userId: string) =>{
     const { data } = await supabase
     .from(DRAWING_ROOM_TABLE)
     .select()
-    .or(`owner.eq.${userId},is_public.eq.true`)
+    .or(`owner.eq.${userId},isPublic.eq.true`)
     .order("created_at", { ascending: false});
 
     return data;
@@ -52,3 +52,13 @@ export const updateRoomDrawing = async (roomId: string, drawing: DrawingRoom["dr
     .eq("id", roomId)
     .select();
 }
+export const deleteDrawingRoom = async (roomId: string) => {
+    const { error } = await supabase
+      .from(DRAWING_ROOM_TABLE)
+      .delete()
+      .eq("id", roomId);
+  
+    if (error) {
+      throw error;
+    }
+  };    

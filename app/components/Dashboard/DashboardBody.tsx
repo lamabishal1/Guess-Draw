@@ -13,6 +13,7 @@ export type RoomType = {
   name: string;
   created_at: string;
   isPublic: boolean;
+  owner: string;
 };
 
 type Props = {
@@ -29,13 +30,10 @@ const DashboardBody = (props: Props) => {
   const [showCreateRoomModal, setShowCreateRoomModal] =
     useState<boolean>(false);
 
-  // Conditions
   const hasNotCreatedARoom = !loading && rooms?.length === 0;
   const hasAtLeastOneRoom = rooms && rooms!.length >= 0;
   const shouldShowRoom = !loading && hasAtLeastOneRoom;
 
-  // Fix 1: Use useCallback to prevent infinite re-renders
-  // Fix 2: Handle undefined user ID with optional chaining and early return
   const loadUserDrawingRooms = useCallback(async () => {
     if (!session?.user?.id) {
       setLoading(false);
@@ -53,12 +51,13 @@ const DashboardBody = (props: Props) => {
     }
   }, [session?.user?.id]);
 
-  // Fix 3: Include loadUserDrawingRooms in dependency array
   useEffect(() => {
     loadUserDrawingRooms();
   }, [loadUserDrawingRooms]);
 
-
+  const handleRoomDelete = (id: string) => {
+    setRooms(prev => prev ? prev.filter(room => room.id !== id) : []);
+  };
 
   return (
     <div className='max-w-5xl flex flex-col gap-10 mx-auto px-4 pt-10'>
@@ -88,15 +87,18 @@ const DashboardBody = (props: Props) => {
 
         {shouldShowRoom && (
           <>
-            {rooms?.map(({ id, name, created_at, isPublic }) => (
+            {rooms?.map(({ id, name, created_at, isPublic, owner }) => (
               <RoomCard
                 key={id}
                 id={id}
                 name={name}
                 created_at={created_at}
                 isPublic={isPublic}
-              />
-            ))}
+                currentUserId={session?.user?.id ?? ""}
+                onDelete={handleRoomDelete}
+                owner={owner}
+                />))}
+                
           </>
         )}
       </section>
