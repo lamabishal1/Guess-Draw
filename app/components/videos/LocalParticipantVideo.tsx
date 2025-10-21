@@ -7,8 +7,7 @@ import Spinner from "./Spinner";
 const LocalParticipantVideo = (props: { participant?: StreamVideoParticipant }) => {
   const { participant } = props;
   return (
-    <div className="relative h-32 w-32 xl:w-full overflow-hidden rounded">
-      <ParticipantView
+<div className="relative h-32 w-32 xl:w-full overflow-hidden rounded scale-x-[-1]">      <ParticipantView
         participant={participant!}
         VideoPlaceholder={VideoPlaceholder}
         className="w-full h-full object-cover" // center crop

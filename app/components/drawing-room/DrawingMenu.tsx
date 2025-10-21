@@ -19,6 +19,7 @@ declare global {
   interface Window {
     whiteboardUndo?: () => void;
     whiteboardRedo?: () => void;
+    whiteboardClear?: () => void;
   }
 }
 
@@ -31,6 +32,8 @@ const DrawingMenu: React.FC<DrawingMenuProps> = ({
   canRedo,
 }) => {
   const [previousColor, setPreviousColor] = useState(drawingPen.color);
+  const [showFormatMenu, setShowFormatMenu] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const toggleEraser = () => {
     if (!isEraserActive) {
@@ -62,6 +65,43 @@ const DrawingMenu: React.FC<DrawingMenuProps> = ({
   const handleRedo = () => {
     if (window.whiteboardRedo) {
       window.whiteboardRedo();
+    }
+  };
+
+  const saveCanvasAsImage = (format: "png" | "jpeg") => {
+    const canvas = document.querySelector("canvas") as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+    const timestamp = new Date().toISOString().split("T")[0];
+    const filename = `drawing-${timestamp}.${format === "png" ? "png" : "jpg"}`;
+
+    if (format === "png") {
+      link.href = canvas.toDataURL("image/png");
+    } else {
+      link.href = canvas.toDataURL("image/jpeg", 0.95);
+    }
+
+    link.download = filename;
+    link.click();
+    setShowFormatMenu(false);
+  };
+
+  const handleClearCanvas = () => {
+    const canvas = document.querySelector("canvas") as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Reload page to reset drawing state
+    if (window.whiteboardClear) {
+      window.whiteboardClear();
     }
   };
 
@@ -227,6 +267,99 @@ const DrawingMenu: React.FC<DrawingMenuProps> = ({
             />
           </svg>
         </button>
+      </div>
+
+      {/* Download Canvas Button */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setShowFormatMenu(!showFormatMenu)}
+          className="w-full h-10 rounded-full flex items-center justify-center border border-slate-300 hover:bg-slate-200 transition-colors"
+          title="Download Canvas"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={2}
+            stroke="currentColor"
+            className="w-6 h-6 text-slate-700"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
+          </svg>
+        </button>
+
+        {/* Format selection menu */}
+        {showFormatMenu && (
+          <div className="absolute left-12 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 bg-white border border-slate-300 p-2 rounded-lg shadow-lg z-50">
+            <button
+              type="button"
+              onClick={() => saveCanvasAsImage("png")}
+              className="px-4 py-2 text-left hover:bg-slate-100 rounded transition-colors text-sm font-medium text-slate-700"
+            >
+              Save as PNG
+            </button>
+            <button
+              type="button"
+              onClick={() => saveCanvasAsImage("jpeg")}
+              className="px-4 py-2 text-left hover:bg-slate-100 rounded transition-colors text-sm font-medium text-slate-700"
+            >
+              Save as JPEG
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Clear Canvas Button */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setShowClearConfirm(!showClearConfirm)}
+          className="w-full h-10 rounded-full flex items-center justify-center border border-slate-300 hover:bg-slate-200 transition-colors"
+          title="Clear Canvas"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-6 h-6 text-slate-700"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 2.98a1.978 1.978 0 00-2.798-1.998L6.582 5.5M9 7v5.5m3-7v5.5m3-7v5.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </button>
+
+        {/* Clear confirmation menu */}
+        {showClearConfirm && (
+          <div className="absolute left-12 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 bg-white border border-red-300 p-3 rounded-lg shadow-lg z-50">
+            <p className="text-sm font-medium text-slate-700">Clear all drawings?</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleClearCanvas}
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-sm font-medium transition-colors"
+              >
+                Yes, Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowClearConfirm(false)}
+                className="px-3 py-1 bg-slate-300 hover:bg-slate-400 text-slate-700 rounded text-sm font-medium transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

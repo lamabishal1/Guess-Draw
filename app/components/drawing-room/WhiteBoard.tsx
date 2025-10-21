@@ -30,6 +30,7 @@ declare global {
   interface Window {
     whiteboardUndo?: () => void;
     whiteboardRedo?: () => void;
+    whiteboardClear?: () => void;
   }
 }
 
@@ -78,15 +79,34 @@ const WhiteBoard: React.FC<BoardProps> = ({
     });
   }, []);
 
+  
+
   // Expose undo/redo methods through window
   useEffect(() => {
     window.whiteboardUndo = handleUndo;
     window.whiteboardRedo = handleRedo;
+    window.whiteboardClear = async () => {
+      setDrawingData([]);
+      setUndoStack([]);
+
+      await supabase
+      .from("drawing-rooms")
+      .update({ drawing: [] })
+      .eq("id", room.id);
+      
+      channel.send({
+        type: "broadcast",
+        event: "clear-canvas",
+        payload: null,
+      });
+    };
+
     return () => {
       delete window.whiteboardUndo;
       delete window.whiteboardRedo;
+      delete window.whiteboardClear;
     };
-  }, [handleUndo, handleRedo]);
+  }, [handleUndo, handleRedo, room.id, channel]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -257,6 +277,11 @@ const WhiteBoard: React.FC<BoardProps> = ({
     const subscription = channel
       .on("broadcast", { event: "new-stroke" }, (payload: BroadcastPayload) => {
         setDrawingData((prev) => [...prev, payload.payload]);
+      })
+      .on("broadcast", { event: "clear-canvas" }, () => {
+        // When another user clears the canvas
+        setDrawingData([]);
+        setUndoStack([]);
       })
       .subscribe();
 
