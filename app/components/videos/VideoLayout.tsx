@@ -1,4 +1,4 @@
-// VideoLayout.tsx - Fixed responsive layout
+// VideoLayout.tsx - Updated to use individual controls
 "use client";
 
 import React, { useEffect } from "react";
@@ -8,9 +8,8 @@ import {
   useCallStateHooks,
 } from "@stream-io/video-react-sdk";
 import Spinner from "./Spinner";
-import LocalParticipantVideo from "./LocalParticipantVideo";
-import RemoteParticipantVideoList from "./RemoteParticipantVideoList";
-import VideoControls from "./VideoControls";
+import ParticipantVideoWithControls from "./ParticipantVideoWithControls";
+import VideoControls from "./VideoControls"; // Keep global controls too
 
 type VideoLayoutProps = {
   setParticipantCount: (count: number) => void;
@@ -43,15 +42,36 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
 
   return (
     <StreamTheme>
-      <div className="flex flex-col">
-        <div className="grid grid-cols-2 xl:grid-cols-1 gap-10 xl:gap-4 text-white capitalize">
-          {localParticipant && (
-            <LocalParticipantVideo participant={localParticipant} />
-          )}
-          {remoteParticipants.length > 0 && (
-            <RemoteParticipantVideoList participants={remoteParticipants} />
-          )}
+      <div className="group flex flex-col w-full h-full overflow-hidden">
+        {/* Videos Grid with Individual Controls */}
+        <div className="flex-1 overflow-auto p-2 md:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4 auto-rows-fr">
+            {/* Local Participant */}
+            {localParticipant && (
+              <div className="w-full h-64 md:h-80 lg:h-96 rounded overflow-hidden">
+                <ParticipantVideoWithControls 
+                  participant={localParticipant} 
+                  isLocal={true}
+                />
+              </div>
+            )}
+
+            {/* Remote Participants */}
+            {remoteParticipants.map((participant) => (
+              <div 
+                key={participant.sessionId} 
+                className="w-full h-64 md:h-80 lg:h-96 rounded overflow-hidden"
+              >
+                <ParticipantVideoWithControls 
+                  participant={participant} 
+                  isLocal={false}
+                />
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Global Controls (for your own mic/camera) */}
         <VideoControls />
       </div>
     </StreamTheme>
