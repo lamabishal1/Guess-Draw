@@ -14,7 +14,9 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const shouldShowRoomName = isRoom && room?.name;
   const shouldShowRoomVisibilityBadge = isRoom && !isLoadingRoom && room;
-  const isRoomOwner = owner?.id === session?.user?.id;
+  
+  // Fixed: Only show ownership if owner data is loaded AND matches current user
+  const isRoomOwner = owner && session?.user?.id && owner.id === session.user.id;
 
   return (
     <nav className="bg-white z-20 border border-slate-200 w-full p-4 shadow-sm">
@@ -43,11 +45,16 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {owner && (
+          {/* Only show owner info if owner is loaded with metadata */}
+          {owner && owner.id && owner.user_metadata && (
             <div className="hidden lg:flex gap-2">
               <span className="text-slate-400">·</span>
               <h3 className="text-slate-500">
-                Owned by {owner.user_metadata?.userName}
+                Owned by {
+                  (owner.user_metadata.userName && owner.user_metadata.userName.trim()) ||
+                  (owner.user_metadata.full_name && owner.user_metadata.full_name.trim()) ||
+                  (owner.email ? owner.email.split('@')[0] : 'Unknown')
+                }
                 {isRoomOwner && <span className="text-blue-600 ml-1">(You)</span>}
               </h3>
             </div>
@@ -66,7 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <div className="hidden sm:flex gap-2">
               <span className="text-slate-400">·</span>
               <h3 className="text-slate-500">
-                Welcome back @{session.user.user_metadata?.userName}
+                Welcome, {session.user.user_metadata?.userName}
               </h3>
             </div>
           )}

@@ -5,6 +5,7 @@ import { Session, User, RealtimeChannel } from '@supabase/supabase-js'
 export interface UserMetadata {
   userName?: string;
   userColor?: string;
+  full_name?: string;
 }
 
 // Extended User type with custom metadata
@@ -22,11 +23,12 @@ export interface Room {
   id: string;
   name: string;
   isPublic: boolean;
-  ownerId: string;
+  owner: string;
   createdAt: string;
   updatedAt: string;
   drawing?: string;
-
+  isPasswordProtected?: boolean;
+  password?: string;
 }
 
 export interface RoomType {
