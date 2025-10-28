@@ -44,7 +44,7 @@ const ParticipantVideoWithControls: React.FC<Props> = ({ participant, isLocal = 
         {/* Mute Status Indicator (for remote participants) */}
         {!isLocal && (
           <div className="flex items-center gap-1">
-            {participant.publishedTracks.includes("audio") ? (
+            {participant.audioStream  ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="currentColor"
@@ -69,7 +69,7 @@ const ParticipantVideoWithControls: React.FC<Props> = ({ participant, isLocal = 
 
         {/* Camera Status Indicator */}
         <div className="flex items-center gap-1">
-          {participant.publishedTracks.includes("video") ? (
+          {participant.videoStream ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="currentColor"
@@ -119,7 +119,6 @@ const ParticipantVideoWithControls: React.FC<Props> = ({ participant, isLocal = 
                   value={volume}
                   onChange={handleVolumeChange}
                   className="w-20 h-1 accent-blue-500"
-                  style={{ writingMode: 'bt-lr', WebkitAppearance: 'slider-vertical' }}
                 />
                 <div className="text-white text-xs text-center mt-1">{volume}%</div>
               </div>
