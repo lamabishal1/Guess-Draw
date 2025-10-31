@@ -34,7 +34,6 @@ export default function Home() {
   }
 
   useEffect(() => {
-    // ✅ Define helper function *before* calling it, and add proper typing
     const handleCheckSession = async (): Promise<void> => {
       try {
         const session = await getUserSession();
@@ -82,7 +81,6 @@ export default function Home() {
       }
     };
   
-    // ✅ Now safe to call it after definition
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) {
         setSession(data.session);
@@ -92,7 +90,6 @@ export default function Home() {
       }
     });
   
-    // ✅ Listen for Supabase auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         if (session) {

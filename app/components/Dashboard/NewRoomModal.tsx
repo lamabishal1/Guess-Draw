@@ -20,7 +20,7 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
 }) => {
   const [roomName, setRoomName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [isPublic, setIsPublic] = useState<boolean>(false);
+  const [isPublic, setIsPublic] = useState<boolean>(true);
   const [isCreatingRoom, setIsCreatingRoom] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -59,7 +59,6 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
       if (newRoom && newRoom[0]?.id) {
         await loadUserDrawingRooms();
         router.push(`/room/${newRoom[0].id}`);
-        // Reset form
         setRoomName("");
         setPassword("");
         setIsPublic(true);
@@ -148,7 +147,6 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
             />
           </div>
 
-          {/* Password Input - Below Room Name */}
           {!isPublic && (
             <div className="flex flex-col gap-2">
               <label htmlFor="password" className="text-slate-700 text-sm font-medium">
@@ -217,7 +215,6 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
             </div>
           )}
 
-          {/* Make Room Public Checkbox */}
           <div className="flex gap-2 items-center text-slate-700 text-sm">
             <input
               id="isPublic"
@@ -232,7 +229,6 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
             </label>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-3 pt-2">
             <button
               type="button"
