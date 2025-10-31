@@ -6,13 +6,22 @@ import Spinner from "./Spinner";
 
 const LocalParticipantVideo = (props: { participant?: StreamVideoParticipant }) => {
   const { participant } = props;
+
   return (
-<div className="relative h-32 w-32 xl:w-full overflow-hidden rounded scale-x-[-1]">      <ParticipantView
-        participant={participant!}
-        VideoPlaceholder={VideoPlaceholder}
-        className="w-full h-full object-cover" // center crop
-      />
-    </div>
+    
+<div className="relative h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 xl:w-full overflow-hidden rounded group">
+  <ParticipantView
+    participant={participant!}
+    VideoPlaceholder={VideoPlaceholder}
+    className="w-full h-full object-cover"
+  />
+
+  {/* Hover name overlay */}
+  <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+    {participant?.name}
+  </div>
+</div>
+
   );
 };
 

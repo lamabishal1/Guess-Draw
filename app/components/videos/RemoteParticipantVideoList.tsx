@@ -13,19 +13,27 @@ const RemoteParticipantVideoList = (props: Props) => {
   const { participants } = props;
 
   return (
-    <div className="flex space-x-2 overflow-x-auto py-2 px-1">
-      {participants.map((participant) => (
-        <div
-          key={participant.sessionId}
-          className="relative flex-shrink-0 h-32 w-32 xl:w-40 overflow-hidden rounded"
-        >
-          <ParticipantView
-            participant={participant}
-            VideoPlaceholder={VideoPlaceholder}
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ))}
+    
+<div className="flex flex-wrap gap-2 justify-center overflow-x-auto py-2 px-1">
+  {participants.map((participant) => (
+    <div
+      key={participant.sessionId}
+      className="relative h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 xl:w-56 overflow-hidden rounded group"
+    >
+      <ParticipantView
+        participant={participant}
+        VideoPlaceholder={VideoPlaceholder}
+        className="w-full h-full object-cover"
+      />
+
+
+          {/* Hover name overlay */}
+          
+<div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        {participant.name}
+      </div>
+    </div>
+  ))}
     </div>
   );
 };
