@@ -6,7 +6,7 @@ const DRAWING_ROOM_TABLE = "drawing-rooms";
 export const createDrawingRoom = async (
     name: string,
     userId: string,
-    isPublic: boolean,
+    isPublic: boolean = true,
     isPasswordProtected: boolean = false,
     password: string | null = null
 ) => {

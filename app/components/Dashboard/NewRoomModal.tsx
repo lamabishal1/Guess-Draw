@@ -80,7 +80,7 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
       setError("");
       setRoomName("");
       setPassword("");
-      setIsPublic(true);
+      setIsPublic(false);
     }
   };
 
@@ -129,7 +129,6 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
             </div>
           )}
 
-          {/* Room Name Input */}
           <div className="flex flex-col gap-2">
             <label htmlFor="roomName" className="text-slate-700 text-sm font-medium">
               Room Name
