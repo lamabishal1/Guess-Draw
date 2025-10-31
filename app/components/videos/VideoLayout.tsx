@@ -42,23 +42,21 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
 
   return (
     <StreamTheme>
-  <div className="group flex flex-col w-full h-full overflow-hidden text-white capitalize">
-
+<div className="w-full bg-slate-900 px-2 py-1 flex flex-wrap gap-2 justify-center items-center rounded-b-lg border-t border-slate-700">
     {/* Video Section */}
     <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-4 justify-center items-center w-full h-full px-2 py-2">
-  {localParticipant && (
-<div className="w-full sm:w-1/2 md:w-1/2 lg:w-1/3 h-auto flex flex-col items-center gap-1">      
-<LocalParticipantVideo participant={localParticipant} />
-    </div>
-  )}
+{localParticipant && (
+  <div className="w-full flex flex-col items-center gap-2">
+    <LocalParticipantVideo participant={localParticipant} />
+  </div>
+)}
   {remoteParticipants.length > 0 && (
-    <div className="w-full sm:w-1/2 md:w-1/2 lg:w-1/3 h-auto flex justify-center">
+    <div className="w-full flex flex-col items-center gap-2">
       <RemoteParticipantVideoList participants={remoteParticipants} />
     </div>
   )}
 </div>
 
-    {/* Controls Section */}
     <div className="p-0 m-0">
       <VideoControls />
     </div>

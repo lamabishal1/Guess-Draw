@@ -20,7 +20,6 @@ const DrawingRoomPage = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [participantCount, setParticipantCount] = useState<number>(0);
 
-  // Password modal states
   const [showPasswordModal, setShowPasswordModal] = useState<boolean>(false);
   const [passwordInput, setPasswordInput] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
@@ -44,10 +43,8 @@ const DrawingRoomPage = () => {
         return;
       }
 
-      // Check if user is owner
       const isOwner = currentRoom.owner === userSession?.user?.id;
 
-      // Check if room requires password
       if (currentRoom.isPasswordProtected && !isOwner) {
         setRoom(currentRoom);
         setShowPasswordModal(true);
@@ -55,10 +52,9 @@ const DrawingRoomPage = () => {
         return;
       }
 
-      // Check public access
       const canEnterRoom = currentRoom.isPublic || isOwner;
 
-      if (!canEnterRoom) {
+      if (!canEnterRoom.isPublic && !isOwner) {
         window.location.href = "/";
         return;
       }

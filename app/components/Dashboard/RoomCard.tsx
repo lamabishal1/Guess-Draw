@@ -44,7 +44,6 @@ export const RoomCard = ({ id, name, created_at, isPublic, onDelete, currentUser
         </span>
       </Link>
 
-      {/* Show delete only for owner */}
       {isOwner && (
       <button
         onClick={handleDelete}

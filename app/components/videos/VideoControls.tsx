@@ -21,7 +21,6 @@ const VideoControls = () => {
 
   return (
     <div className="w-full bg-slate-900 px-3 py-2 flex flex-wrap gap-2 justify-center items-center rounded-b-lg border-t border-slate-700">
-      {/* Mute/Unmute Button */}
       <button
         onClick={handleToggleMute}
         className={`flex items-center justify-center gap-1 px-3 py-2 rounded font-medium transition-colors text-xs sm:text-sm ${
@@ -31,7 +30,6 @@ const VideoControls = () => {
         }`}
         title={isMute ? "Unmute microphone" : "Mute microphone"}
       >
-        {/* Mic Icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-4 h-4"
@@ -46,7 +44,6 @@ const VideoControls = () => {
         </svg>
       </button>
 
-      {/* Camera On/ */}
       <button
         onClick={handleToggleCamera}
         className={`flex items-center justify-center gap-1 px-3 py-2 rounded font-medium transition-colors text-xs sm:text-sm ${
@@ -56,7 +53,6 @@ const VideoControls = () => {
         }`}
         title={!isEnabled ? "Turn on camera" : "Turn off camera"}
       >
-        {/* Camera Icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           className="w-4 h-4"
@@ -71,7 +67,6 @@ const VideoControls = () => {
         </svg>
       </button>
 
-      {/* End Call Button */}
       <button
         onClick={() => window.location.href = "/"}
         className="flex items-center justify-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-medium transition-colors text-xs sm:text-sm"

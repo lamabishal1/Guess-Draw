@@ -62,7 +62,7 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
         // Reset form
         setRoomName("");
         setPassword("");
-        setIsPublic(false);
+        setIsPublic(true);
         setShow(false);
       } else {
         setError("Failed to create room. Please try again.");
@@ -81,7 +81,7 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
       setError("");
       setRoomName("");
       setPassword("");
-      setIsPublic(false);
+      setIsPublic(true);
     }
   };
 
