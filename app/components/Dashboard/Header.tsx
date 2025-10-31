@@ -9,6 +9,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ session, setShowCreateRoomModal }) => {
+
   return (
     <section className="w-full flex justify-between items-center">
       <h3 className="text-slate-600">

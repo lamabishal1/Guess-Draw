@@ -54,7 +54,7 @@ const DrawingRoomPage = () => {
 
       const canEnterRoom = currentRoom.isPublic || isOwner;
 
-      if (!canEnterRoom.isPublic && !isOwner) {
+      if (!canEnterRoom) {
         window.location.href = "/";
         return;
       }
@@ -93,7 +93,6 @@ const DrawingRoomPage = () => {
 
     if (isValid) {
       setShowPasswordModal(false);
-      // Fetch owner after successful password verification
       if (room?.owner) {
         try {
           const ownerData = await fetchUserById(room.owner);
@@ -118,7 +117,6 @@ const DrawingRoomPage = () => {
     setIsVerifyingPassword(false);
   };
 
-  // Password Modal - Show before main content if password required
   if (showPasswordModal && room) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -191,7 +189,6 @@ const DrawingRoomPage = () => {
     );
   }
 
-  // Main room content
   return (
     <main>
       <Navbar
@@ -204,7 +201,7 @@ const DrawingRoomPage = () => {
       />
 
       <div
-        className="relative w-full h-full"
+        className="relative w-full h-full px-2 lg:px-2 xl:px-2"
         style={{ background: "linear-gradient(45deg, #03A9F4, #4CAF50)" }}
       >
         {isLoading ? (

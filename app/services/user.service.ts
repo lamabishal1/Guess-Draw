@@ -24,3 +24,12 @@ export const generateUserVideoToken = async ( userId: string) => {
     const data = await res.json();
     return data;
 }
+
+export const logoutUser = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+        console.error("Error logging out:", error.message);
+        return false;
+    }
+    return true;
+}

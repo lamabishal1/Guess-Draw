@@ -1,24 +1,20 @@
 // types/supabase.ts
 import { Session, User, RealtimeChannel } from '@supabase/supabase-js'
 
-// Custom user metadata interface
 export interface UserMetadata {
   userName?: string;
   userColor?: string;
   full_name?: string;
 }
 
-// Extended User type with custom metadata
 export interface ExtendedUser extends Omit<User, 'user_metadata'> {
   user_metadata: UserMetadata;
 }
 
-// Extended Session type
 export interface ExtendedSession extends Omit<Session, 'user'> {
   user: LocalUser;
 }
 
-// Room related types
 export interface Room {
   id: string;
   name: string;
@@ -38,7 +34,6 @@ export interface RoomType {
   isPublic: boolean;
 }
 
-// Owner type (could be extended based on your needs)
 export interface Owner {
   id: string;
   email?: string;
@@ -68,27 +63,6 @@ export interface BroadcastPayload {
   payload: CursorPayload;
 }
 
-export interface DatabaseChange {
-  eventType: string;
-  new: {
-    id?: string;
-    name?: string;
-    drawing?: string;
-    isPublic?: boolean;
-    ownerId?: string;
-    [key: string]: unknown;
-  };
-  old: {
-    id?: string;
-    name?: string;
-    drawing?: string;
-    isPublic?: boolean;
-    ownerId?: string;
-    [key: string]: unknown;
-  };
-  schema: string;
-  table: string;
-}
 
 export interface MousePosition {
   x: number;
@@ -100,7 +74,6 @@ export interface CanvasOffset {
   top: number;
 }
 
-// User service response types
 export interface UserResponse {
   user?: ExtendedUser;
   error?: string;
@@ -180,21 +153,18 @@ export interface DrawSize {
   width: number;
 }
 
-// Service function return types
 export interface DrawingRoomService {
   createDrawingRoom: (name: string, userId: string, isPublic: boolean) => Promise<CreateRoomResponse[] | null>;
   updateRoomDrawing: (roomId: string, drawingData: string) => Promise<void>;
   fetchUserDrawingRooms: (userId: string) => Promise<RoomType[] | null>;
 }
 
-// Error handling types
 export interface ServiceError {
   message: string;
   code?: string;
   details?: unknown;
 }
 
-// Canvas drawing state
 export interface CanvasState {
   isDrawing: boolean;
   lastPosition: MousePosition;

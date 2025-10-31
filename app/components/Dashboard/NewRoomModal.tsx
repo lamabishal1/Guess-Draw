@@ -61,7 +61,7 @@ const NewRoomModal: React.FC<NewRoomModalProps> = ({
         router.push(`/room/${newRoom[0].id}`);
         setRoomName("");
         setPassword("");
-        setIsPublic(true);
+        setIsPublic(false);
         setShow(false);
       } else {
         setError("Failed to create room. Please try again.");

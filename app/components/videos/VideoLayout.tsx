@@ -8,7 +8,7 @@ import {
 } from "@stream-io/video-react-sdk";
 import Spinner from "./Spinner";
 import LocalParticipantVideo from "./LocalParticipantVideo";
-import RemoteParticipantVideoList from "./RemoteParticipantVideoList";
+import RemoteParticipantVideo from "./RemoteParticipantVideoList";
 import VideoControls from "./VideoControls";
 
 type VideoLayoutProps = {
@@ -40,29 +40,40 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
     );
   }
 
-  return (
-    <StreamTheme>
-<div className="w-full bg-slate-900 px-2 py-1 flex flex-wrap gap-2 justify-center items-center rounded-b-lg border-t border-slate-700">
-    {/* Video Section */}
-    <div className="flex flex-col md:flex-row flex-wrap gap-2 md:gap-4 justify-center items-center w-full h-full px-2 py-2">
-{localParticipant && (
-  <div className="w-full flex flex-col items-center gap-2">
-    <LocalParticipantVideo participant={localParticipant} />
-  </div>
-)}
-  {remoteParticipants.length > 0 && (
-    <div className="w-full flex flex-col items-center gap-2">
-      <RemoteParticipantVideoList participants={remoteParticipants} />
-    </div>
-  )}
-</div>
+  const allParticipants = localParticipant
+    ? [localParticipant, ...remoteParticipants]
+    : [...remoteParticipants];
 
-    <div className="p-0 m-0">
-      <VideoControls />
-    </div>
-    
-  </div>
-</StreamTheme>
+  return (
+     <StreamTheme>
+      <div className="w-full h-full flex flex-col">
+        {/* Video Controls at top on small/medium screens, stays with video on large */}
+        <div className="lg:hidden w-full">
+          <VideoControls />
+        </div>
+
+        {/* Videos - Horizontal scroll on small/medium, vertical on large */}
+        <div className="flex-1 overflow-x-auto lg:overflow-y-auto p-2 md:p-4">
+          <div className="flex flex-row lg:flex-col gap-4 lg:gap-2">
+            {localParticipant && (
+              <div className="flex-shrink-0 w-64 md:w-80 lg:w-full">
+                <LocalParticipantVideo participant={localParticipant} />
+              </div>
+            )}
+            {remoteParticipants.length > 0 && (
+              <div className="flex-shrink-0 w-64 md:w-80 lg:w-full">
+                <RemoteParticipantVideoList participants={remoteParticipants} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Video Controls at bottom on large screens */}
+        <div className="hidden lg:block w-full">
+          <VideoControls />
+        </div>
+      </div>
+    </StreamTheme>
   );
 };
 

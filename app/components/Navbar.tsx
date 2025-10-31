@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { NavbarProps } from "@/types/supabase";
+import { logoutUser } from "@/app/services/user.service";
 
 const Navbar: React.FC<NavbarProps> = ({
   session,
@@ -14,13 +15,20 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const shouldShowRoomName = isRoom && room?.name;
   const shouldShowRoomVisibilityBadge = isRoom && !isLoadingRoom && room;
-  
-  // Fixed: Only show ownership if owner data is loaded AND matches current user
   const isRoomOwner = owner && session?.user?.id && owner.id === session.user.id;
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const handleLogoutClick = async () => {
+    const success = await logoutUser();
+    if (success) {
+      window.location.href = "/login";
+    }
+  };
 
   return (
     <nav className="bg-white z-20 border border-slate-200 w-full p-4 shadow-sm">
       <div className="mx-auto flex justify-between items-center">
+        {/* Left section: Logo + Room info */}
         <section className="flex gap-2 items-center">
           <Link
             href="/"
@@ -44,75 +52,37 @@ const Navbar: React.FC<NavbarProps> = ({
               </span>
             </div>
           )}
-
-          {/* Only show owner info if owner is loaded with metadata */}
-          {owner && owner.id && owner.user_metadata && (
-            <div className="hidden lg:flex gap-2">
-              <span className="text-slate-400">·</span>
-              <h3 className="text-slate-500">
-                Owned by {
-                  (owner.user_metadata.userName && owner.user_metadata.userName.trim()) ||
-                  (owner.user_metadata.full_name && owner.user_metadata.full_name.trim()) ||
-                  (owner.email ? owner.email.split('@')[0] : 'Unknown')
-                }
-                {isRoomOwner && <span className="text-blue-600 ml-1">(You)</span>}
-              </h3>
-            </div>
-          )}
-
-          {participantCount && participantCount > 0 && (
-            <div className="hidden md:flex gap-2">
-              <span className="text-slate-400">·</span>
-              <h3 className="text-slate-500">
-                {participantCount} participant{participantCount !== 1 ? 's' : ''}
-              </h3>
-            </div>
-          )}
-
-          {!isRoom && session && (
-            <div className="hidden sm:flex gap-2">
-              <span className="text-slate-400">·</span>
-              <h3 className="text-slate-500">
-                Welcome, {session.user.user_metadata?.userName}
-              </h3>
-            </div>
-          )}
         </section>
 
+        {/* Right section: Avatar + Dropdown */}
         <section className="flex items-center gap-3">
-          {isRoom && (
-            <Link
-              href="/"
-              className="flex items-center font-semibold text-sm px-3 py-2 rounded-full gap-2 bg-blue-600 text-white hover:bg-blue-500 transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-4 h-4"
+          {session ? (
+            <div className="relative">
+              {/* Avatar circle */}
+              <div
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className="h-10 w-10 overflow-hidden rounded-full border-2 border-white shadow-md flex items-center justify-center text-white font-semibold text-sm cursor-pointer"
+                style={{ backgroundColor: session.user.user_metadata?.userColor || "#6b7280" }}
+                title={`@${session.user.user_metadata?.userName || "User"}`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-                />
-              </svg>
-              <span>Dashboard</span>
-            </Link>
-          )}
+                {session.user.user_metadata?.userName?.charAt(0)?.toUpperCase() || "U"}
+              </div>
 
-          {session && (
-            <div
-              className="h-10 w-10 overflow-hidden rounded-full border-2 border-white shadow-md flex items-center justify-center text-white font-semibold text-sm"
-              style={{ 
-                backgroundColor: session.user.user_metadata?.userColor || '#6b7280' 
-              }}
-              title={`@${session.user.user_metadata?.userName || 'User'}`}
-            >
-              {session.user.user_metadata?.userName?.charAt(0)?.toUpperCase() || 'U'}
+              {/* Dropdown menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 flex flex-col bg-white border border-slate-300 rounded shadow-lg z-50 min-w-[120px]">
+                  <button
+                    onClick={handleLogoutClick}
+                    className="px-4 py-2 hover:bg-slate-100 text-slate-900 w-full text-left"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
+          ) : (
+            // Loading placeholder so avatar container stays mounted
+            <div className="h-10 w-10 rounded-full bg-gray-300 animate-pulse" />
           )}
         </section>
       </div>

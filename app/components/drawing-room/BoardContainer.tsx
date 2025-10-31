@@ -13,9 +13,6 @@ export interface DrawingPen {
 interface BoardContainerProps {
   room: Room | null;
 }
-
-
-
 const BoardContainer: React.FC<BoardContainerProps> = ({ room }) => {
 
   const [canUndo, setCanUndo] = useState(false);

@@ -6,7 +6,6 @@ const DRAWING_ROOM_TABLE = "drawing-rooms";
 export const createDrawingRoom = async (
     name: string,
     userId: string,
-    isPublic: boolean = true,
     isPasswordProtected: boolean = false,
     password: string | null = null
 ) => {
@@ -15,24 +14,21 @@ export const createDrawingRoom = async (
     .insert({
         name,
         owner: userId,
-        isPublic,
+        isPublic: true,
         isPasswordProtected,
         password: isPasswordProtected ? password : null,
         created_at: new Date().toISOString(),
     })
-    .select();
-    
-    
+    .select();   
     return data;
 }
-
 
 export const fetchUserDrawingRooms = async (userId: string) =>{
     const { data } = await supabase
     .from(DRAWING_ROOM_TABLE)
     .select()
     .or(`owner.eq.${userId},isPublic.eq.true`)
-    .order("created_at", { ascending: false});
+   .order("created_at", { ascending: false});
 
     return data;
 }
@@ -42,7 +38,7 @@ export const fetchDrawingRoomByiId = async (id: string) => {
     .from(DRAWING_ROOM_TABLE)
     .select()
     .eq("id", id);
-
+    
     return data;
 }
 

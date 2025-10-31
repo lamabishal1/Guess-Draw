@@ -8,6 +8,7 @@ import { fetchUserDrawingRooms } from "@/app/services/drawing-room.service";
 import Header from "./Header";
 import { ExtendedSession } from "@/types/supabase";
 
+
 export type RoomType = {
   id: string;
   name: string;

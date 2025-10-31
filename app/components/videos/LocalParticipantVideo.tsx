@@ -16,7 +16,7 @@ const LocalParticipantVideo = ({ participant }: { participant?: StreamVideoParti
         />
 
         {/* Hover name overlay */}
-        <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-x-[-1]">
           {participant?.name}
         </div>
       </div>
