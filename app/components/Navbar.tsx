@@ -28,7 +28,7 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <nav className="bg-white z-20 border border-slate-200 w-full p-4 shadow-sm">
       <div className="mx-auto flex justify-between items-center">
-        {/* Left section: Logo + Room info */}
+        {/* Left section: Logo + Room infoo */}
         <section className="flex gap-2 items-center">
           <Link
             href="/"

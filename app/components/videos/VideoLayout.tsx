@@ -47,7 +47,7 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
   return (
      <StreamTheme>
       <div className="w-full h-full flex flex-col">
-        {/* Video Controls at top on small/medium screens, stays with video on large */}
+        {/* Video Controls at top on small/medium screens, stays with video on large e*/}
         <div className="lg:hidden w-full">
           <VideoControls />
         </div>
