@@ -6,6 +6,7 @@ const DRAWING_ROOM_TABLE = "drawing-rooms";
 export const createDrawingRoom = async (
     name: string,
     userId: string,
+    isPublic: boolean = true,
     isPasswordProtected: boolean = false,
     password: string | null = null
 ) => {
@@ -14,12 +15,12 @@ export const createDrawingRoom = async (
     .insert({
         name,
         owner: userId,
-        isPublic: true,
+        isPublic,
         isPasswordProtected,
         password: isPasswordProtected ? password : null,
         created_at: new Date().toISOString(),
     })
-    .select();   
+    .select();
     return data;
 }
 
