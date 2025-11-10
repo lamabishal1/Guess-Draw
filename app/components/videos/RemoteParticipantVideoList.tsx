@@ -28,13 +28,8 @@ const RemoteParticipantVideo: React.FC<Props> = ({ participant }) => {
 const VideoPlaceholder = ({ }: { participant: StreamVideoParticipant }) => {
   return (
     <div className="absolute inset-0 bg-slate-700 z-[1] text-center text-slate-300 flex items-center justify-center">
-      <div className="hidden xl:flex items-center justify-center">
-        <p className="lowercase ml-1"> is joining</p>
+            <Spinner />
       </div>
-      <div className="xl:hidden">
-        <Spinner />
-      </div>
-    </div>
   );
 };
 
