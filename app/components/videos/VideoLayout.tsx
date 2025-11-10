@@ -42,11 +42,9 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
   return (
      <StreamTheme>
       <div className="w-full h-full flex flex-col">
-        {/* Video Controls at top on small/medium screens, stays with video on large e*/}
         <div className="lg:hidden w-full">
         </div>
 
-        {/* Videos - Horizontal scroll on small/medium, vertical on large */}
         <div className="flex-1 overflow-x-auto lg:overflow-y-auto p-2 md:p-4">
           <div className="flex flex-row lg:flex-col gap-4 lg:gap-2">
             {localParticipant && (
@@ -62,7 +60,6 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
           </div>
         </div>
 
-        {/* Video Controls at bottom on large screens */}
         <div className="hidden lg:block w-full">
         </div>
       </div>
