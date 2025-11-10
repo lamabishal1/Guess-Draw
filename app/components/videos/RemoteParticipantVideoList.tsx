@@ -15,10 +15,9 @@ const RemoteParticipantVideo: React.FC<Props> = ({ participant }) => {
       <ParticipantView
         participant={participant}
         VideoPlaceholder={() => <VideoPlaceholder participant={participant} />}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover "
       />
 
-      {/* Hover name overlay */}
       <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 scale-x-[-1]">
         {participant.name}
       </div>

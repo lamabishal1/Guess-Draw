@@ -9,7 +9,6 @@ import {
 import Spinner from "./Spinner";
 import LocalParticipantVideo from "./LocalParticipantVideo";
 import RemoteParticipantVideoList from "./RemoteParticipantVideoList";
-import VideoControls from "./VideoControls";
 
 type VideoLayoutProps = {
   setParticipantCount: (count: number) => void;
@@ -45,7 +44,6 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
       <div className="w-full h-full flex flex-col">
         {/* Video Controls at top on small/medium screens, stays with video on large e*/}
         <div className="lg:hidden w-full">
-          <VideoControls />
         </div>
 
         {/* Videos - Horizontal scroll on small/medium, vertical on large */}
@@ -66,7 +64,6 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
 
         {/* Video Controls at bottom on large screens */}
         <div className="hidden lg:block w-full">
-          <VideoControls />
         </div>
       </div>
     </StreamTheme>

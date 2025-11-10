@@ -7,11 +7,10 @@ import Spinner from "./Spinner";
 const LocalParticipantVideo = ({ participant }: { participant?: StreamVideoParticipant }) => {
   return (
     <div className="relative w-full max-w-md aspect-video overflow-hidden rounded group">
-      {/* Video container with mirrored view */}
       <div className="relative w-full aspect-video overflow-hidden rounded group scale-x-[-1]">
         <ParticipantView
           participant={participant!}
-          VideoPlaceholder={VideoPlaceholder}
+          VideoPlaceholder={VideoPlaceholder} 
           className="w-full h-full object-cover"
         />
 
