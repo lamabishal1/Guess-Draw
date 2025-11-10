@@ -42,6 +42,13 @@ const DrawingRoomPage = () => {
         window.location.href = "/";
         return;
       }
+      
+      // Make sure session is loaded before decision
+      if (userSession === null) {
+      console.warn("No session found — redirecting to login");
+      window.location.href = "/login";
+      return;
+    }
 
       const isOwner = currentRoom.owner === userSession?.user?.id;
 
@@ -51,7 +58,6 @@ const DrawingRoomPage = () => {
         setIsLoading(false);
         return;
       }
-
       const canEnterRoom = currentRoom.isPublic || isOwner;
 
       if (!canEnterRoom) {

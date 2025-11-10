@@ -8,7 +8,7 @@ import {
 } from "@stream-io/video-react-sdk";
 import Spinner from "./Spinner";
 import LocalParticipantVideo from "./LocalParticipantVideo";
-import RemoteParticipantVideo from "./RemoteParticipantVideoList";
+import RemoteParticipantVideoList from "./RemoteParticipantVideoList";
 import VideoControls from "./VideoControls";
 
 type VideoLayoutProps = {
@@ -40,10 +40,6 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
     );
   }
 
-  const allParticipants = localParticipant
-    ? [localParticipant, ...remoteParticipants]
-    : [...remoteParticipants];
-
   return (
      <StreamTheme>
       <div className="w-full h-full flex flex-col">
@@ -62,7 +58,7 @@ const VideoLayout: React.FC<VideoLayoutProps> = ({ setParticipantCount }) => {
             )}
             {remoteParticipants.length > 0 && (
               <div className="flex-shrink-0 w-64 md:w-80 lg:w-full">
-                <RemoteParticipantVideoList participants={remoteParticipants} />
+                <RemoteParticipantVideoList participant={remoteParticipants[0]} />
               </div>
             )}
           </div>

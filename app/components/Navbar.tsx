@@ -11,11 +11,12 @@ const Navbar: React.FC<NavbarProps> = ({
   isRoom = false,
   room,
   isLoadingRoom = false,
-  participantCount,
 }) => {
   const shouldShowRoomName = isRoom && room?.name;
   const shouldShowRoomVisibilityBadge = isRoom && !isLoadingRoom && room;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isRoomOwner = owner && session?.user?.id && owner.id === session.user.id;
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleLogoutClick = async () => {
